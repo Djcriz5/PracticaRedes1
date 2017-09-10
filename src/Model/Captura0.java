@@ -43,8 +43,76 @@ import org.jnetpcap.protocol.lan.IEEE802dot3;
 
 		 return buf.toString();
 	 }
+     public static void revisarControl(String s1,int ssap){
+         String tipo = s1.startsWith("0")?"tipo I":s1.startsWith("10")?"tipo S":s1.startsWith("11")?"tipo U":"algo no esta bien";
+         System.out.println("\nTrama tipo "+tipo);
+         String response="";
+         String lectura="";
+         if(tipo.equals("S")){
+             lectura=""+s1.charAt(2)+s1.charAt(3);
+             switch (""+s1.charAt(2)+s1.charAt(3)){
+                 case "00":
+                     response="RR listo para recibir ";
+                     break;
+                 case "01":
+                     response="RET rechazado";
+                     break;
+                 case "10":
+                     response="RNR no listo para recibir";
+                     break;
+                 case "11":
+                     response="SRET rechazo selectivo";
+                     break;
+             }
 
-	 public static void main(String[] args) {
+         }else if(tipo.equals("U")){
+             lectura=""+""+s1.charAt(2)+s1.charAt(3)+s1.charAt(5)+s1.charAt(6)+s1.charAt(7);
+             switch (""+s1.charAt(2)+s1.charAt(3)+s1.charAt(5)+s1.charAt(6)+s1.charAt(7)){
+                 case "00001": //0 es orden 1 respuesta
+                     response= ssap == 0 ?"SNRM": "";
+                     break;
+                 case "11011":
+                     response= ssap == 0 ?"SNRME": "";
+                     break;
+                 case "11000":
+                     response= ssap == 0 ?"SARM": "DM";
+                     break;
+                 case "11010":
+                     response= ssap == 0 ?"SARME": "";
+                     break;
+                 case "11100":
+                     response= ssap == 0 ?"SABM": "";
+                     break;
+                 case "11110":
+                     response= ssap == 0 ?"SABME": "";
+                     break;
+                 case "00000":
+                     response= ssap == 0 ?"UI": "UI";
+                     break;
+                 case "00110":
+                     response= ssap == 0 ?"": "UA";
+                     break;
+                 case "00010":
+                     response= ssap == 0 ?"DISC": "RD";
+                     break;
+                 case "10000":
+                     response= ssap == 0 ?"SIM": "RIM";
+                     break;
+                 case "00100":
+                     response= ssap == 0 ?"UP": "";
+                     break;
+                 case "11001":
+                     response= ssap == 0 ?"RSET": "";
+                     break;
+                 case "11101":
+                     response= ssap == 0 ?"XID": "XID";
+                     break;
+             }
+         }
+         System.out.println("Codigo:"+response+"\nLectura: "+lectura);
+     }
+
+     public static void main(String[] args) {
 		 Pcap pcap=null;
 		 try{
 			 BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
@@ -175,79 +243,17 @@ import org.jnetpcap.protocol.lan.IEEE802dot3;
 							 byte b1 = (byte) packet.getUByte(16);
 							 String s1 = String.format("%8s", Integer.toBinaryString(b1 & 0xFF)).replace(' ', '0');
 							 System.out.println("\nControl:"+s1); // 10000001
-							 String tipo = s1.startsWith("0")?"I":s1.startsWith("10")?"S":s1.startsWith("11")?"U":"algo no esta bien";
-							 System.out.println("\nTrama tipo "+tipo);
-							 String response="";
-							 String lectura="";
-							 if(tipo.equals("S")){
-							 	lectura=""+s1.charAt(2)+s1.charAt(3);
-								 	switch (""+s1.charAt(2)+s1.charAt(3)){
-										case "00":
-											response="RR listo para recibir ";
-											break;
-										case "01":
-											response="RET rechazado";
-											break;
-										case "10":
-											response="RNR no listo para recibir";
-											break;
-										case "11":
-											response="SRET rechazo selectivo";
-											break;
-									}
+                             revisarControl(s1,ssap);
 
-							 }else if(tipo.equals("I")){
-							 	lectura=""+""+s1.charAt(2)+s1.charAt(3)+s1.charAt(5)+s1.charAt(6)+s1.charAt(7);
-								 switch (""+s1.charAt(2)+s1.charAt(3)+s1.charAt(5)+s1.charAt(6)+s1.charAt(7)){
-									 case "00001": //0 es orden 1 respuesta
-										 response= ssap == 0 ?"SNRM": "";
-										 break;
-									 case "11011":
-										 response= ssap == 0 ?"SNRME": "";
-										 break;
-									 case "11000":
-										 response= ssap == 0 ?"SARM": "DM";
-										 break;
-									 case "11010":
-										 response= ssap == 0 ?"SARME": "";
-										 break;
-									 case "11100":
-										 response= ssap == 0 ?"SABM": "";
-										 break;
-									 case "11110":
-										 response= ssap == 0 ?"SABME": "";
-										 break;
-									 case "00000":
-										 response= ssap == 0 ?"UI": "UI";
-										 break;
-									 case "00110":
-										 response= ssap == 0 ?"": "UA";
-										 break;
-									 case "00010":
-										 response= ssap == 0 ?"DISC": "RD";
-										 break;
-									 case "10000":
-										 response= ssap == 0 ?"SIM": "RIM";
-										 break;
-									 case "00100":
-										 response= ssap == 0 ?"UP": "";
-										 break;
-									 case "11001":
-										 response= ssap == 0 ?"RSET": "";
-										 break;
-									 case "11101":
-										 response= ssap == 0 ?"XID": "XID";
-										 break;
-								 }
-							 }
-							 System.out.println("Codigo:"+response+"\nLectura: "+lectura);
 						 }else{
 						 	System.out.println("modo extendido");
 							 String s1 = String.format("%8s", Integer.toBinaryString((byte) packet.getUByte(16) & 0xFF)).replace(' ', '0');
 							 String s2extend = String.format("%8s", Integer.toBinaryString((byte) packet.getUByte(17) & 0xFF)).replace(' ', '0');
 							 System.out.println("\nControl:"+s1+" "+s2extend); // 10000001
-							 String tipo = s1.startsWith("0")?"tipo I":s1.startsWith("10")?"tipo S":s1.startsWith("11")?"tipo U":"algo no esta bien";
-							 System.out.println("\nTrama tipo "+tipo);
+                             revisarControl(s1,ssap);
+
+
+
 						 }
 					 } else if(longitud>=1500){
 						 System.out.println("-->Trama ETHERNET");
@@ -274,4 +280,5 @@ import org.jnetpcap.protocol.lan.IEEE802dot3;
 			 pcap.close();
 		 }catch(IOException e){e.printStackTrace();}
 	 }
+
 }
