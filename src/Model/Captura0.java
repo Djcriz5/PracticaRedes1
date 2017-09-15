@@ -44,13 +44,15 @@ import org.jnetpcap.protocol.lan.IEEE802dot3;
 		 return buf.toString();
 	 }
      public static void revisarControl(String s1,int ssap){
-         String tipo = s1.startsWith("0")?"tipo I":s1.startsWith("10")?"tipo S":s1.startsWith("11")?"tipo U":"algo no esta bien";
+         String tipo = s1.startsWith("0")?"I":s1.startsWith("10")?"S":s1.startsWith("11")?"U":"algo no esta bien";
          System.out.println("\nTrama tipo "+tipo);
          String response="";
-         String lectura="";
+         String lectura=s1;
          if(tipo.equals("S")){
              lectura=""+s1.charAt(2)+s1.charAt(3);
-             switch (""+s1.charAt(2)+s1.charAt(3)){
+			 System.out.println("\nAndamos aca  ");
+
+			 switch (""+s1.charAt(2)+s1.charAt(3)){
                  case "00":
                      response="RR listo para recibir ";
                      break;
@@ -67,6 +69,8 @@ import org.jnetpcap.protocol.lan.IEEE802dot3;
 
          }else if(tipo.equals("U")){
              lectura=""+""+s1.charAt(2)+s1.charAt(3)+s1.charAt(5)+s1.charAt(6)+s1.charAt(7);
+
+
              switch (""+s1.charAt(2)+s1.charAt(3)+s1.charAt(5)+s1.charAt(6)+s1.charAt(7)){
                  case "00001": //0 es orden 1 respuesta
                      response= ssap == 0 ?"SNRM": "";
@@ -227,13 +231,13 @@ import org.jnetpcap.protocol.lan.IEEE802dot3;
 					 int longitud = (packet.getUByte(12)*256)+packet.getUByte(13);// se multiplica el ubyte 12 por 256 para posicionarlo antes del 13 como de ber de ir
 					 System.out.printf("\nLongitud: %d (%04X)",longitud,longitud );
 					 if(longitud<1500){
-						 System.out.println("--->Trama IEEE802.3");
-						 System.out.printf(" |-->MAC Destino: %02X:%02X:%02X:%02X:%02X:%02X",packet.getUByte(0),packet.getUByte(1),packet.getUByte(2),packet.getUByte(3),packet.getUByte(4),packet.getUByte(5));
-						 System.out.printf("\n |-->MAC Origen: %02X:%02X:%02X:%02X:%02X:%02X",packet.getUByte(6),packet.getUByte(7),packet.getUByte(8),packet.getUByte(9),packet.getUByte(10),packet.getUByte(11));
-						 System.out.printf("\n |-->DSAP: %02X",packet.getUByte(14));
+						 System.out.println("----Trama IEEE802.3");
+						 System.out.printf("----MAC Destino: %02X:%02X:%02X:%02X:%02X:%02X",packet.getUByte(0),packet.getUByte(1),packet.getUByte(2),packet.getUByte(3),packet.getUByte(4),packet.getUByte(5));
+						 System.out.printf("\n ----MAC Origen: %02X:%02X:%02X:%02X:%02X:%02X",packet.getUByte(6),packet.getUByte(7),packet.getUByte(8),packet.getUByte(9),packet.getUByte(10),packet.getUByte(11));
+						 System.out.printf("\n ----DSAP: %02X",packet.getUByte(14));
 						 int ssap = packet.getUByte(15)& 0x00000001;//checa si tiene un 1 al final del byte
 						 String c_r = (ssap==1)?"Respuesta":(ssap==0)?"Comando":"Otro";
-						 System.out.printf("\n |-->SSAP: %02X   %s",packet.getUByte(15), c_r);
+						 System.out.printf("\n----SSAP: %02X   %s",packet.getUByte(15), c_r);
 						 byte b0 = (byte) packet.getUByte(15);
 						 String s0 = String.format("%8s", Integer.toBinaryString(b0 & 0xFF)).replace(' ', '0');
 						 System.out.println("\nSSAP:"+s0); // 10000001
@@ -242,13 +246,17 @@ import org.jnetpcap.protocol.lan.IEEE802dot3;
 							 System.out.println("modo normal");
 							 byte b1 = (byte) packet.getUByte(16);
 							 String s1 = String.format("%8s", Integer.toBinaryString(b1 & 0xFF)).replace(' ', '0');
+							 s1=new StringBuilder(s1).reverse().toString();
 							 System.out.println("\nControl:"+s1); // 10000001
-                             revisarControl(s1,ssap);
+							 revisarControl(s1,ssap);
 
 						 }else{
 						 	System.out.println("modo extendido");
 							 String s1 = String.format("%8s", Integer.toBinaryString((byte) packet.getUByte(16) & 0xFF)).replace(' ', '0');
 							 String s2extend = String.format("%8s", Integer.toBinaryString((byte) packet.getUByte(17) & 0xFF)).replace(' ', '0');
+							 s1=new StringBuilder(s1).reverse().toString();
+							 s2extend=new StringBuilder(s2extend).reverse().toString();
+
 							 System.out.println("\nControl:"+s1+" "+s2extend); // 10000001
                              revisarControl(s1,ssap);
 
